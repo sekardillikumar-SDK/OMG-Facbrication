@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice - OMG Fabrication</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00b0f0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="images.jpeg">
+    <style>
+        .invoice-card {
+            background: white;
+            color: black;
+            padding: 40px;
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            font-family: 'Times New Roman', serif;
+        }
+
+        .controls {
+            max-width: 210mm;
+            margin: 20px auto;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        /* Invoice styles copied and adjusted from original */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .company-info {
+            width: 60%;
+            color: #00b0f0;
+        }
+
+        .company-name {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .company-details {
+            font-size: 12px;
+        }
+
+        .invoice-meta {
+            width: 35%;
+            text-align: right;
+            font-size: 14px;
+            color: #000;
+        }
+
+        .customer-section {
+            border-bottom: 1px solid #000;
+            padding: 15px 0;
+            font-size: 14px;
+            color: #000;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th,
+        td {
+            border: 1px solid #000;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background: #f0f0f0;
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        [contenteditable="true"] {
+            background: rgba(0, 176, 240, 0.05);
+            outline: none;
+            transition: 0.3s;
+        }
+
+        [contenteditable="true"]:focus {
+            background: rgba(0, 176, 240, 0.15);
+            box-shadow: 0 0 5px rgba(0, 176, 240, 0.3);
+        }
+
+        @media print {
+            @page {
+                margin: 0;
+            }
+
+            body {
+                padding: 10mm;
+                background: white;
+            }
+
+            header,
+            .controls,
+            footer,
+            section:not(.invoice-wrapper),
+            .login-overlay {
+                display: none !important;
+            }
+
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .invoice-wrapper {
+                margin-top: 0;
+                padding: 0;
+            }
+
+            .invoice-card {
+                box-shadow: none;
+                margin: 0;
+                width: 100%;
+            }
+
+            [contenteditable="true"] {
+                background: transparent;
+            }
+        }
+
+        /* Login Overlay Styling */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .login-card {
+            background: var(--bg-card);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-card h2 {
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        .login-card input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background: #2a2a2a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: white;
+        }
+
+        .login-card button {
+            width: 100%;
+        }
+
+        #protected-content {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="login-overlay">
+        <div class="login-card">
+            <img src="images.jpeg" alt="Logo" style="width: 80px; margin-bottom: 20px;">
+            <h2>Invoice Access</h2>
+            <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 0.9rem;">Please enter your credentials
+                to access the invoice generator.</p>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <button class="btn" onclick="checkLogin()">Login</button>
+            <p id="login-error" style="color: #ff4d4d; margin-top: 15px; font-size: 0.85rem; display: none;">Invalid
+                username or password.</p>
+        </div>
+    </div>
+
+    <div id="protected-content">
+        <header>
+            <div class="logo">
+                <img src="images.jpeg" alt="OMG Fabrication Logo">
+                <span>OMG FABRICATION</span>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="index.html#services">Services</a></li>
+                    <li><a href="invoice.html" class="active">Invoice</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <div class="invoice-wrapper">
+            <div style="width: 100%;">
+                <div class="controls">
+                    <button class="btn" onclick="addRow()">+ Add Item</button>
+                    <button class="btn" style="background: #dc3545; box-shadow: none;" onclick="removeSelectedRow()">-
+                        Remove Item</button>
+                    <button class="btn" style="background: #6c757d; box-shadow: none;" onclick="window.print()">Print /
+                        PDF</button>
+                </div>
+
+                <div class="invoice-card" id="invoice">
+                    <div class="header">
+                        <div class="company-info">
+                            <img src="images.jpeg" alt="Logo"
+                                style="width: 100px; height: 100px; float: left; margin-right: 20px; border: 1px solid #eee; border-radius: 10px;">
+                            <div class="company-name" contenteditable="true" style="font-size: 28px;">OMG FABRICATION
+                            </div>
+                            <div class="company-details" contenteditable="true" style="font-size: 14px;">
+                                No:5 Bharathi Nagar main road,<br>
+                                RMK Nagar back side,<br>
+                                Vandalur Post, Chennai -600 048.<br>
+                                Mobile No: +91 98417 84433.
+                            </div>
+                        </div>
+                        <div class="invoice-meta">
+                            <div>Prop: <strong style="color:#00b0f0" contenteditable="true">S. Yuvaraj</strong></div>
+                            <div>INV NO: <span contenteditable="true">006/ 2025-26</span></div>
+                            <div>DATE: <span contenteditable="true">18.12.2025</span></div>
+                        </div>
+                    </div>
+
+                    <div class="customer-section" contenteditable="true">
+                        To M/S. CENTAUR ELECTRONIC COMPONENTS<br>
+                        No.30, WOMEN INDUSTRIAL PARK, THIRUMUDIVAKKAM<br>
+                        Chennai-600 044.<br>
+                        GSTIN/UIN : 33ABQPV8771JIZQ<br>
+                        PH : 044 42009018/22345704
+                    </div>
+
+                    <div
+                        style="margin-top: 2px; font-weight: bold; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 5px 0; font-size: 14px;">
+                        Vendor Code: <span contenteditable="true"></span>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">S.No</th>
+                                <th>Description</th>
+                                <th style="width: 80px;" class="text-center">Quantity</th>
+                                <th style="width: 100px;" class="text-center">Unit Price</th>
+                                <th style="width: 120px;" class="text-center">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="items-body">
+                            <tr onclick="selectRow(this)">
+                                <td>1</td>
+                                <td contenteditable="true">Earth Box Welding</td>
+                                <td contenteditable="true" class="text-right" oninput="calculateRow(this)">10</td>
+                                <td contenteditable="true" class="text-right" oninput="calculateRow(this)">2000</td>
+                                <td class="row-amount text-right">20,000</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="4" style="text-align: left; font-weight: bold;">Payable Amount</td>
+                                <td id="total-amount" class="text-right" style="font-weight: bold;">20,000</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <div
+                        style="margin-top: 2px; font-weight: bold; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 5px 0; font-size: 14px;">
+                        Rupees In word: <span id="amount-words" style="text-transform: capitalize;">Twenty Thousand
+                            Only.</span>
+                    </div>
+
+                    <div
+                        style="margin-top: 15px; display: flex; justify-content: space-between; font-size: 12px; line-height: 1.6;">
+                        <div style="width: 48%;">
+                            <div contenteditable="true">Reqd Date : As per delivery schedule</div>
+                            <div contenteditable="true">Despatch Mode : By Road</div>
+                            <div style="margin-top: 10px; font-weight: bold;">Special Instructions</div>
+                            <div contenteditable="true" style="border: 1px solid #000; height: 50px; margin-top: 5px;">
+                            </div>
+                        </div>
+                        <div style="width: 48%; text-align: right;">
+                            <div contenteditable="true">Sales tax Extra as applicable</div>
+                            <div contenteditable="true">Payment Terms &nbsp;&nbsp; 45 Days</div>
+
+                            <div style="margin-top: 40px; font-weight: bold;">
+                                For OMG Fabrication,<br><br><br>
+                                Authorized Signatory.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="script.js"></script>
+        <script>
+            // Access Control Logic
+            function checkLogin() {
+                const user = document.getElementById('username').value;
+                const pass = document.getElementById('password').value;
+
+                // Simple hardcoded credentials for demo/request
+                if (user === 'admin' && pass === 'omg123') {
+                    document.getElementById('login-overlay').style.display = 'none';
+                    document.getElementById('protected-content').style.display = 'block';
+                } else {
+                    document.getElementById('login-error').style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById('login-error').style.display = 'none';
+                    }, 3000);
+                }
+            }
+
+            // Allow Enter key to login
+            document.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    checkLogin();
+                }
+            });
+
+            // Invoice specific logic
+            function formatCurrency(num) { return new Intl.NumberFormat('en-IN').format(num); }
+            function parseCurrency(str) { return parseFloat(str.replace(/,/g, '')) || 0; }
+
+            function calculateRow(element) {
+                const row = element.parentElement;
+                const qty = parseFloat(row.cells[2].innerText) || 0;
+                const price = parseFloat(row.cells[3].innerText) || 0;
+                const amount = qty * price;
+                row.cells[4].innerText = formatCurrency(amount);
+                calculateTotal();
+            }
+
+            function calculateTotal() {
+                let total = 0;
+                document.querySelectorAll('.row-amount').forEach(el => total += parseCurrency(el.innerText));
+                document.getElementById('total-amount').innerText = formatCurrency(total);
+                document.getElementById('amount-words').innerText = numberToWords(total) + " Only.";
+            }
+
+            function selectRow(row) {
+                document.querySelectorAll('#items-body tr').forEach(r => r.style.background = 'transparent');
+                row.style.background = 'rgba(0, 176, 240, 0.1)';
+                window.selectedRow = row;
+            }
+
+            function addRow() {
+                const tbody = document.getElementById('items-body');
+                const row = tbody.insertRow();
+                row.onclick = function () { selectRow(this); };
+                row.innerHTML = `
+                    <td>${tbody.rows.length}</td>
+                    <td contenteditable="true">Item Name</td>
+                    <td contenteditable="true" class="text-right" oninput="calculateRow(this)">0</td>
+                    <td contenteditable="true" class="text-right" oninput="calculateRow(this)">0</td>
+                    <td class="row-amount text-right">0</td>
+                `;
+                calculateTotal();
+            }
+
+            function removeSelectedRow() {
+                if (window.selectedRow && document.querySelectorAll('#items-body tr').length > 1) {
+                    window.selectedRow.remove();
+                    document.querySelectorAll('#items-body tr').forEach((r, i) => r.cells[0].innerText = i + 1);
+                    calculateTotal();
+                }
+            }
+
+            function numberToWords(n) {
+                const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
+                const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+                if ((n = n.toString()).length > 9) return 'overflow';
+                let s = ('000000000' + n).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+                if (!s) return '';
+                let str = '';
+                str += (s[1] != 0) ? (a[Number(s[1])] || b[s[1][0]] + ' ' + a[s[1][1]]) + 'Crore ' : '';
+                str += (s[2] != 0) ? (a[Number(s[2])] || b[s[2][0]] + ' ' + a[s[2][1]]) + 'Lakh ' : '';
+                str += (s[3] != 0) ? (a[Number(s[3])] || b[s[3][0]] + ' ' + a[s[3][1]]) + 'Thousand ' : '';
+                str += (s[4] != 0) ? (a[Number(s[4])] || b[s[4][0]] + ' ' + a[s[4][1]]) + 'Hundred ' : '';
+                str += (s[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(s[5])] || b[s[5][0]] + ' ' + a[s[5][1]]) : '';
+                return str;
+            }
+        </script>
+    </div>
+</body>
+
+</html>

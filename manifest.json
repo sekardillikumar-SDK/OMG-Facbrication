@@ -1,0 +1,24 @@
+{
+  "name": "OMG Fabrication",
+  "short_name": "OMG Fab",
+  "description": "Premium industrial fabrication and invoice management tool.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#00b0f0",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "images.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
